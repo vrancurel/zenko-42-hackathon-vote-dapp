@@ -54,8 +54,10 @@ window.App = {
     var meta;
     Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
       meta = instance;
-      return meta.getWinner.call(account, {from: account});
+	console.log('account ', account);
+      return meta.getWinner.call({from: account});
     }).then(function(value) {
+	console.log('value ', JSON.stringify(value));
       var winner_element = document.getElementById("winner");
       winner_element.innerHTML = value.valueOf();
     }).catch(function(e) {
@@ -64,18 +66,59 @@ window.App = {
     });
   },
 
-  sendCoin: function() {
+  registerTeam: function() {
     var self = this;
 
-    var amount = parseInt(document.getElementById("amount").value);
-    var receiver = document.getElementById("receiver").value;
+    var team_name = document.getElementById("team_name").value;
+    var team_address = document.getElementById("team_address").value;
 
     this.setStatus("Initiating transaction... (please wait)");
 
     var meta;
     Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
       meta = instance;
-      return meta.sendCoin(receiver, amount, {from: account});
+      return meta.registerTeam(team_name, team_address, {from: account});
+    }).then(function() {
+      self.setStatus("Transaction complete!");
+      self.getWinner();
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error sending coin; see log.");
+    });
+  },
+
+  registerVoter: function() {
+    var self = this;
+
+    var voter_name = document.getElementById("voter_name").value;
+    var voter_address = document.getElementById("voter_address").value;
+
+    this.setStatus("Initiating transaction... (please wait)");
+
+    var meta;
+    Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
+      meta = instance;
+      return meta.registerVoter(voter_name, voter_address, {from: account});
+    }).then(function() {
+      self.setStatus("Transaction complete!");
+      self.getWinner();
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error sending coin; see log.");
+    });
+  },
+
+  voteForTeam: function() {
+    var self = this;
+
+    var team_name = document.getElementById("team_name").value;
+
+    this.setStatus("Initiating transaction... (please wait)");
+
+    var meta;
+    Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
+      meta = instance;
+      return meta.voteForTeam(team_name, {from: account});
     }).then(function() {
       self.setStatus("Transaction complete!");
       self.getWinner();
@@ -84,6 +127,7 @@ window.App = {
       self.setStatus("Error sending coin; see log.");
     });
   }
+
 };
 
 window.addEventListener('load', function() {
