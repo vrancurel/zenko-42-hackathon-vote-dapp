@@ -55,9 +55,30 @@ window.App = {
     Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
       meta = instance;
 	console.log('account ', account);
-      return meta.getWinner.call({from: account});
+      return meta.getWinner.call();//{from: account});
     }).then(function(value) {
-	console.log('value ', JSON.stringify(value));
+      console.log('value ', JSON.stringify(value));
+      var winner_element = document.getElementById("winner");
+      winner_element.innerHTML = value.valueOf();
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error getting winner; see log.");
+    });
+  },
+
+  getTeamIdByName: function() {
+    var self = this;
+
+    var id_team_name = document.getElementById("id_team_name").value;
+
+    var meta;
+    Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
+      meta = instance;
+	console.log('account ', account);
+      return meta.getTeamIdbyName.call(id_team_name, {from: account});
+	//return meta.getWinner.call();//{from: account});
+    }).then(function(value) {
+      console.log('value ', JSON.stringify(value));
       var winner_element = document.getElementById("winner");
       winner_element.innerHTML = value.valueOf();
     }).catch(function(e) {
@@ -70,15 +91,16 @@ window.App = {
     var self = this;
 
     var team_name = document.getElementById("team_name").value;
-    var team_address = document.getElementById("team_address").value;
 
     this.setStatus("Initiating transaction... (please wait)");
 
     var meta;
     Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
       meta = instance;
-      return meta.registerTeam(team_name, team_address, {from: account});
-    }).then(function() {
+	console.log('team_name', team_name);
+      return meta.registerTeam(team_name, {from: account});
+    }).then(function(value) {
+      console.log('value ', JSON.stringify(value));
       self.setStatus("Transaction complete!");
       self.getWinner();
     }).catch(function(e) {
@@ -99,7 +121,8 @@ window.App = {
     Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
       meta = instance;
       return meta.registerVoter(voter_name, voter_address, {from: account});
-    }).then(function() {
+    }).then(function(value) {
+      console.log('value ', JSON.stringify(value));
       self.setStatus("Transaction complete!");
       self.getWinner();
     }).catch(function(e) {
@@ -111,15 +134,17 @@ window.App = {
   voteForTeam: function() {
     var self = this;
 
-    var team_name = document.getElementById("team_name").value;
+    var votee_team_name = document.getElementById("votee_team_name").value;
 
     this.setStatus("Initiating transaction... (please wait)");
 
     var meta;
     Zenko_42_Hackathon_Ballot.deployed().then(function(instance) {
       meta = instance;
-      return meta.voteForTeam(team_name, {from: account});
-    }).then(function() {
+      console.log('votee_team_name', votee_team_name);
+      return meta.voteForTeam(votee_team_name, {from: account});
+    }).then(function(value) {
+      console.log('value ', JSON.stringify(value));
       self.setStatus("Transaction complete!");
       self.getWinner();
     }).catch(function(e) {

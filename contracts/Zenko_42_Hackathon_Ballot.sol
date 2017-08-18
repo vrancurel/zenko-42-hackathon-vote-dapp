@@ -3,11 +3,13 @@ pragma solidity ^0.4.15;
 contract Zenko_42_Hackathon_Ballot {
     
     uint8 constant VOTES_PER_VOTER = 3;
+    bool ballotClosed;
     
     struct Team {
-        string name;
-        uint votes;
+        uint id;
+        int votes;
         address addr;
+        bool exists;
     }
     
     struct Voter {
@@ -16,135 +18,181 @@ contract Zenko_42_Hackathon_Ballot {
         string name;
     }
     
-    
     address chairperson;
     mapping(string => Team) teams;
+    string[] teamNames;
     mapping(address => Voter) voters;
-    string firstTeam;
-    uint firstTeamVotes = 0;
-    string secondTeam;
-    uint secondTeamVotes = 0;
-    string thirdTeam;
-    uint thirdTeamVotes = 0;
     
     // Constructor, the caller becomes chairperson of this ballot
     function Zenko_42_Hackathon_Ballot() {
         chairperson = msg.sender;
-        // the chair person is also a voter
+        ballotClosed = false;
+        // the chair person is also a super voter
         voters[chairperson].weight = 1;
         voters[chairperson].name = "chair";
-        voters[chairperson].votesLeft = VOTES_PER_VOTER;
+        voters[chairperson].votesLeft = VOTES_PER_VOTER * 2;
     }
     
     /// May only be called by $(chairperson).
-    function registerVoter(string name, address voter) returns (string _reply) {
-        _reply = "Who in the blue hell are you?";
-        if (msg.sender != chairperson || voters[voter].weight > 0) return;
+    function registerVoter(string name, address voter) returns (string) {
+        if (msg.sender != chairperson || voters[voter].weight > 0) return "Who in the blue hell are you?";
         voters[voter].weight = 1;
         voters[voter].name = name;
         voters[voter].votesLeft = VOTES_PER_VOTER;
         
-        
-        _reply = "We have a new voter!";
+        return "We have a new voter!";
     }
     
      /// May only be called by $(chairperson). a super voter has twice the amount of votes
-    function registerSuperVoter(string name, address voter) returns (string _reply) {
-        _reply = "Who in the blue hell are you?";
-        if (msg.sender != chairperson || voters[voter].weight > 0) return;
+    function registerSuperVoter(string name, address voter) returns (string) {
+        if (msg.sender != chairperson || voters[voter].weight > 0) return "Who in the blue hell are you?";
         voters[voter].weight = 1;
         voters[voter].name = name;
         voters[voter].votesLeft = VOTES_PER_VOTER*2;
         
-        _reply = "We have a new super voter!";
+        return "We have a new super voter!";
     }
     
     /// May only be called by $(chairperson).
-    function registerTeam(string n, address a) {
-        if (msg.sender != chairperson) return;
+    function registerTeam(string teamName) returns (string) {
+        if (msg.sender != chairperson) return "Know Your Role And Shut Your Mouth";
         
-        Team storage t = teams[n];
-        t.name = n;
+        Team storage t = teams[teamName];
+        if (t.exists == true) // Test that the team exists
+            return "Team already exists...";
+        
+        t.id = teamNames.length;
         t.votes = 0;
-        t.addr = a;
+        t.exists = true;
+        
+        teamNames.push(teamName);
+        
+        return "Keep it coming";
     }
     
-    function voteForTeam(string teamName) returns (string _msg) {
-        _msg = "Know Your Role And Shut Your Mouth";
+    function voteForTeam(string teamName) returns (string) {
+        if (ballotClosed) return "Ballot closed";
+        
         
         Voter storage voter = voters[msg.sender];
-        if (voter.votesLeft <= 0) return; // Can't vote more than your alloted votes
+        if (voter.votesLeft <= 0) return "No votes left, Know Your Role And Shut Your Mouth"; // Can't vote more than your alloted votes
         Team storage t = teams[teamName];
-        if (t.addr == 0) // Test that the team exists
-            return;
-        
-        _msg = "This is The Most Electrifying Ballot In Education today";
-        
+        if (t.exists == false) // Test that the team exists
+            return "Unkwown team, Know Your Role And Shut Your Mouth";
+
         voter.votesLeft -= 1;
         t.votes += voter.weight;
         
-        if (t.votes > firstTeamVotes) {
-            // We have a new winner! // cascade down
-            thirdTeam = secondTeam;
-            thirdTeamVotes = secondTeamVotes;
-            secondTeam = firstTeam;
-            secondTeamVotes = firstTeamVotes;
-            firstTeam = t.name;
-            firstTeamVotes = t.votes;
-        } else if (t.votes > secondTeamVotes) {
-            // We have a new winner! // cascade down
-            thirdTeam = secondTeam;
-            thirdTeamVotes = secondTeamVotes;
-            secondTeam = t.name;
-            secondTeamVotes = t.votes;
+        return "This is The Most Electrifying Ballot In Education today";
+    }
+    
+    function getTeamNamebyId(uint id) constant returns(string) {
+        return teamNames[id];
+    }
+    
+    function getTeamIdbyName(string name) constant returns(int) {
+        bytes32 hash = sha3(name);
+        for (uint p = 0; p < teamNames.length; p++) {
+            if (hash == sha3(teamNames[p])) {
+                return int(p);
+            }
         }
-         else if (t.votes > thirdTeamVotes) {
-            // We have a new winner! // cascade down
-            thirdTeam = t.name;
-            thirdTeamVotes = t.votes;
-        } 
+        
+        return -1;
     }
     
-    function getWinner() returns (string _winner){
-        _winner = firstTeam;
+    function getTeamVotes(string teamName) constant returns(int) {
+        if (msg.sender != chairperson) return -1;
+        return teams[teamName].votes;
     }
     
-    function getSecond() returns (string _winner){
-        _winner = secondTeam;
+    function getWinnerID() constant private returns (uint) {
+        uint winnerID = 0;
+        int winnerScore = -1;
+        
+        for (uint p = 0; p < teamNames.length; p++) {
+            Team memory t = teams[teamNames[p]];
+            if (t.votes > winnerScore) {
+             winnerID = t.id;
+             winnerScore = t.votes;
+           }
+        }
+        
+        return winnerID;
     }
     
-    function getThird() returns (string _winner){
-        _winner = thirdTeam;
+    function getSecondID() constant private returns (uint) {
+        uint winnerID = getWinnerID();
+        uint secondID = 0;
+        int secondScore = -1;
+        
+        for (uint p = 0; p < teamNames.length; p++) {
+            if (p == winnerID)
+                continue;
+            
+            Team memory t = teams[teamNames[p]];
+            if (t.votes > secondScore) {
+             secondID = t.id;
+             secondScore = t.votes;
+           }
+        }
+        
+        return secondID;
     }
     
-    /* Utility functions */
-    function strConcat(string _a, string _b, string _c, string _d, string _e) internal returns (string){
-        bytes memory _ba = bytes(_a);
-        bytes memory _bb = bytes(_b);
-        bytes memory _bc = bytes(_c);
-        bytes memory _bd = bytes(_d);
-        bytes memory _be = bytes(_e);
-        string memory abcde = new string(_ba.length + _bb.length + _bc.length + _bd.length + _be.length);
-        bytes memory babcde = bytes(abcde);
-        uint k = 0;
-        for (uint i = 0; i < _ba.length; i++) babcde[k++] = _ba[i];
-        for (i = 0; i < _bb.length; i++) babcde[k++] = _bb[i];
-        for (i = 0; i < _bc.length; i++) babcde[k++] = _bc[i];
-        for (i = 0; i < _bd.length; i++) babcde[k++] = _bd[i];
-        for (i = 0; i < _be.length; i++) babcde[k++] = _be[i];
-        return string(babcde);
+    function getThirdID() constant private returns (uint) {
+        uint winnerID = getWinnerID();
+        uint secondID = getSecondID();
+        uint thirdID = 0;
+        int thirdScore = -1;
+        
+        for (uint p = 0; p < teamNames.length; p++) {
+            if (p == winnerID || p == secondID)
+                continue;
+            
+            Team memory t = teams[teamNames[p]];
+            if (t.votes > thirdScore) {
+             thirdID = t.id;
+             thirdScore = t.votes;
+           }
+        }
+        
+        return thirdID;
     }
-
-    function strConcat(string _a, string _b, string _c, string _d) internal returns (string) {
-        return strConcat(_a, _b, _c, _d, "");
+    
+    function getVotesLeft() constant returns (uint) {
+        Voter storage voter = voters[msg.sender];
+        return voter.votesLeft;
     }
-
-    function strConcat(string _a, string _b, string _c) internal returns (string) {
-        return strConcat(_a, _b, _c, "", "");
+    
+    function getWinner() constant returns (string) {
+        if (!ballotClosed && msg.sender != chairperson) return "You can't see that yet";
+        return teamNames[getWinnerID()];
     }
-
-    function strConcat(string _a, string _b) internal returns (string) {
-        return strConcat(_a, _b, "", "", "");
+    
+    function getSecond() constant returns (string) {
+        if (!ballotClosed && msg.sender != chairperson) return "You can't see that yet";
+        return teamNames[getSecondID()];
+    }
+    
+    function getThird() constant returns (string) {
+        if (!ballotClosed && msg.sender != chairperson) return "You can't see that yet";
+        return teamNames[getThirdID()];
+    }
+    
+    function closeBalllot() {
+       if (msg.sender != chairperson) return;
+       ballotClosed = true;
+    }
+    
+    function reopenBalllot() {
+       if (msg.sender != chairperson) return;
+       ballotClosed = false;
+    }
+    
+    function kill() { 
+        if (msg.sender != chairperson) return;
+        suicide(chairperson);       // kills this contract and sends remaining funds back to creator
     }
     
 }

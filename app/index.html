@@ -11,9 +11,13 @@
   <h3>Winner <span class="black"><span id="winner"></span></span></h3>
 
   <br><br>
+  <h1>GetTeamIdByName</h1>
+  <br><label for="id_team_name">Team Name:</label><input type="text" id="id_team_name" placeholder="e.g., crazy_team"></input>
+  <br><br><button id="send" onclick="App.getTeamIdByName()">Get Team Id By Name</button>
+
+  <br><br>
   <h1>RegisterTeamName</h1>
   <br><label for="team_name">Team Name:</label><input type="text" id="team_name" placeholder="e.g., crazy_team"></input>
-  <br><label for="team_address">Team Address:</label><input type="text" id="team_address" placeholder="e.g., 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"></input>
   <br><br><button id="send" onclick="App.registerTeam()">Register Team</button>
 
   <br><br>
@@ -25,7 +29,7 @@
 
   <br><br>
   <h1>VoteForTeam</h1>
-  <br><label for="team_name">Voter Name:</label><input type="text" id="team_name" placeholder="e.g., crazy_voter"></input>
+  <br><label for="votee_team_name">Team Name:</label><input type="text" id="votee_team_name" placeholder="e.g., crazy_voter"></input>
   <br><br><button id="send" onclick="App.voteForTeam()">Vote for Team</button>
   <br><br>
 

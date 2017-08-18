@@ -1,8 +1,8 @@
 fs = require("fs");
 Web3 = require("web3");
 
-contractAddress = "0xbf2D4d0F21456461C4441320567f0AB5D7875019";
-kwameAddress = "dd788f9fea8d8c78fa28328ab926e7884bd2c6a9";
+contractAddress = "0x5091e86a9c46a0b29f8d41d9d3324c6b22f1fb9a";
+vrAddress       = "0xee817aa03ed3917d0727e50afdd5d996aefda7b1";
 
 console.log('get web3');
 if (typeof web3 !== 'undefined') {
@@ -14,11 +14,13 @@ if (typeof web3 !== 'undefined') {
 //console.log('web3=',web3.eth);
 
 console.log('load file');
-var source = JSON.parse(fs.readFileSync('../build/contracts/MetaCoin.json', 'utf8'));
+var source = JSON.parse(fs.readFileSync('../build/contracts/Zenko_42_Hackathon_Ballot.json', 'utf8'));
 //console.log(source);
 
 console.log('load contract');
-var myContract = new web3.eth.Contract(source.abi, contractAddress, {from: kwameAddress});
+var myContract = new web3.eth.Contract(source.abi, contractAddress);
 //console.log(myContract);
 
-myContract.methods.getBalance(kwameAddress).call().then(console.log);
+//myContract.methods.get42().call().then(console.log);
+//myContract.methods.registerTeam("xxx").send({from: vrAddress}).then(console.log);
+myContract.methods.getTeamIdbyName("zzz").call().then(console.log);
